@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Project Genie — Scene Studio</title>
+<meta name="description" content="Cinematic 3D world building in your browser. PBR rendering, asset ingestion with smart texture matching, photo mode and one-click export.">
+<link rel="icon" href="assets/orb-hero.jpg">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+} }
+</script>
+<script>window.__genieReady = false; setTimeout(function () { if (!window.__genieReady) { var p = document.querySelector('#splash p'); if (p) p.textContent = 'Still loading — check your connection…'; } }, 9000);</script>
+<script src="./vendor/jszip.min.js"></script>
+</head>
+<body>
+
+<!-- ════════ SPLASH ════════ -->
+<div id="splash">
+  <img class="orb" src="assets/orb-hero.jpg" alt="Genie orb">
+  <h1>Project <b>Genie</b><span class="exp">SCENE STUDIO</span></h1>
+  <p>Cinematic worlds, built by touch</p>
+  <div class="splash-bar"><i></i></div>
+</div>
+
+<div id="app">
+
+  <!-- ════════ TOP BAR ════════ -->
+  <header id="topbar">
+    <div class="brand">
+      <img src="assets/orb-hero.jpg" alt="">
+      <span class="name">Project <b>Genie</b></span>
+      <span class="exp-pill">SCENE&nbsp;STUDIO</span>
+    </div>
+    <div class="vdiv"></div>
+    <div class="tgroup">
+      <button class="icon-btn" id="btnUndo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg></button>
+      <button class="icon-btn" id="btnRedo" title="Redo (Ctrl+Shift+Z)"><svg viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg></button>
+    </div>
+    <div class="vdiv"></div>
+    <div class="tgroup">
+      <button class="icon-btn" id="btnSnap" title="Toggle grid snap (G)"><svg viewBox="0 0 24 24"><path d="M5 3h4v9a3 3 0 0 0 6 0V3h4v9a7 7 0 0 1-14 0z"/><path d="M5 8h4M15 8h4"/></svg></button>
+      <button class="icon-btn" id="btnGrid" title="Toggle grid (Shift+G)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button>
+    </div>
+    <div class="spacer"></div>
+    <div class="tgroup">
+      <button class="icon-btn" id="btnSave" title="Quick-save scene to browser (Ctrl+S)"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>
+      <button class="icon-btn" id="btnOpen" title="Open project file"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+      <button class="pill" id="btnExport" title="Export"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export</button>
+      <button class="pill primary" id="btnPhoto" title="Cinematic photo mode (P)"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo</button>
+      <button class="icon-btn" id="btnSettings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <button class="icon-btn" id="btnHelp" title="Shortcuts & help (?)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ════════ MIDDLE ════════ -->
+  <div id="middle">
+
+    <!-- icon rail -->
+    <nav id="rail">
+      <button class="rail-btn active" data-panel="tools"><svg viewBox="0 0 24 24"><path d="M4 21l6.5-6.5M14.5 6.5l3 3L23 8l-4-4-1.5 5.5z"/><path d="M13 4l7 7"/></svg><span>Tools</span></button>
+      <button class="rail-btn" data-panel="create"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="10"/></svg><span>Create</span></button>
+      <button class="rail-btn" data-panel="assets"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg><span>Assets</span></button>
+      <button class="rail-btn" data-panel="world"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg><span>World</span></button>
+      <button class="rail-btn" data-panel="outliner"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5M2 17l10 5 10-5"/></svg><span>Layers</span></button>
+    </nav>
+
+    <!-- side panel -->
+    <aside id="sidepanel" class="panel">
+
+      <!-- ── TOOLS PANEL ── -->
+      <section class="panel-page" id="page-tools">
+        <div class="panel-head"><h2>Scene Tools</h2></div>
+        <div class="panel-body">
+          <div class="tool-grid" id="transformTools">
+            <button class="tool-tile" data-mode="select" title="Select (Q)"><svg viewBox="0 0 24 24"><path d="M5 3l14 8.5-6.2 1.8L11 20z"/></svg><span>Select</span></button>
+            <button class="tool-tile active" data-mode="translate" title="Move (W)"><svg viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg><span>Move</span></button>
+            <button class="tool-tile" data-mode="rotate" title="Rotate (E)"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 1 1-2.1-9.4L23 10"/></svg><span>Rotate</span></button>
+            <button class="tool-tile" data-mode="scale" title="Scale (R)"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>Scale</span></button>
+          </div>
+
+          <div class="sec"><div class="sec-title">Snapping &amp; Precision</div>
+            <div class="row"><label for="swSnap">Grid Snap</label><span class="switch"><input type="checkbox" id="swSnap"><i></i></span></div>
+            <div class="slider-row"><span class="lab">Snap size</span><input type="range" id="rngSnap" min="0.1" max="2" step="0.1" value="0.5"><span class="num" id="numSnap">0.5 m</span></div>
+            <div class="world-note">Surface placement is always on — assets dropped into the scene land flush on whatever is beneath them. Rotation snaps to 15° when snap is on.</div>
+          </div>
+
+          <div class="sec"><div class="sec-title">Workspace</div>
+            <div class="row"><label for="swGrid">Show Grid</label><span class="switch"><input type="checkbox" id="swGrid" checked><i></i></span></div>
+            <div class="row"><label for="swGround">Ground Plane</label><span class="switch"><input type="checkbox" id="swGround" checked><i></i></span></div>
+            <div class="btn-row">
+              <button class="mini-btn" id="btnGroundSnap">Snap to Ground</button>
+              <button class="mini-btn" id="btnCenter">Center Origin</button>
+              <button class="mini-btn" id="btnNormalize">Normalize Size</button>
+            </div>
+            <div class="btn-row">
+              <button class="mini-btn" id="btnDuplicate">Duplicate ⌘D</button>
+              <button class="mini-btn warn" id="btnDelete">Delete ⌫</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CREATE PANEL ── -->
+      <section class="panel-page hidden" id="page-create">
+        <div class="panel-head"><h2>Create</h2></div>
+        <div class="panel-body">
+          <div class="sec" style="margin-top:2px"><div class="sec-title">Primitives</div>
+            <div class="create-grid" id="primitivesGrid"></div>
+          </div>
+          <div class="sec"><div class="sec-title">Procedural</div>
+            <div class="create-grid" id="proceduralGrid"></div>
+          </div>
+          <div class="sec"><div class="sec-title">Lighting</div>
+            <div class="create-grid" id="lightsGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ASSETS PANEL ── -->
+      <section class="panel-page hidden" id="page-assets">
+        <div class="panel-head"><h2>Asset Vault</h2><span class="mono" id="assetCount" style="font-size:10px;color:var(--dim)">0 ITEMS</span></div>
+        <div class="panel-body">
+          <label class="dropzone" id="dropzone">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>
+            <span class="d1">Drop anything here</span>
+            <span class="d2">GLB · GLTF · OBJ · FBX · STL · PLY · PNG/JPG/WebP/HDR · <b style="color:#fff">ZIP archives</b><br>Any file size — large uploads welcome</span>
+            <input type="file" id="fileInput" multiple accept="*/*">
+          </label>
+          <div class="smart-log hidden" id="smartLog">
+            <div class="sl-head" id="smartLogHead"><span>✦ Smart Match — auto textures</span><span id="smartLogCount">0</span></div>
+            <div class="sl-body hidden" id="smartLogBody"></div>
+          </div>
+          <div class="row" style="margin-top:12px;margin-bottom:2px;"><label for="applyAsSelect" style="flex:0 0 auto;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim-2);font-weight:700;">Apply as</label>
+            <select id="applyAsSelect" style="flex:1;background:var(--panel-2);border:1px solid var(--stroke);color:var(--text);border-radius:10px;padding:7px 10px;font-size:11px;">
+              <option value="map">Base Color</option>
+              <option value="normalMap">Normal</option>
+              <option value="roughnessMap">Roughness</option>
+              <option value="metalnessMap">Metalness</option>
+              <option value="emissiveMap">Emissive</option>
+              <option value="aoMap">Ambient Occlusion</option>
+            </select>
+          </div>
+          <div class="asset-grid" id="assetGrid"></div>
+          <div class="world-note" style="margin-top:12px;">Tip: drag a card straight into the viewport. Drag a texture onto any inspector slot. Enable <b>Smart Match</b> in Settings to auto-wire textures on import.</div>
+        </div>
+      </section>
+
+      <!-- ── WORLD PANEL ── -->
+      <section class="panel-page hidden" id="page-world">
+        <div class="panel-head"><h2>World &amp; Light</h2></div>
+        <div class="panel-body">
+          <div class="sec" style="margin-top:2px"><div class="sec-title">Cinematic Presets</div>
+            <div class="preset-grid" id="presetGrid">
+              <button class="preset" data-preset="golden" style="background:linear-gradient(165deg,#ffcf8a 0%,#e8873f 45%,#2c1a10 100%)"><span>Golden Hour</span></button>
+              <button class="preset" data-preset="day" style="background:linear-gradient(165deg,#bfe3ff 0%,#5d9cec 50%,#1a2a3f 100%)"><span>Daylight</span></button>
+              <button class="preset" data-preset="noir" style="background:linear-gradient(165deg,#d8d8d8 0%,#6b6b6b 50%,#050505 100%)"><span>Noir</span></button>
+              <button class="preset" data-preset="midnight" style="background:linear-gradient(165deg,#233a6b 0%,#0d1530 55%,#000 100%)"><span>Midnight</span></button>
+              <button class="preset" data-preset="overcast" style="background:linear-gradient(165deg,#cfd4d8 0%,#7d858c 55%,#23272b 100%)"><span>Overcast</span></button>
+              <button class="preset" data-preset="dawn" style="background:linear-gradient(165deg,#ffc4d1 0%,#8f7bd8 50%,#141126 100%)"><span>Dawn</span></button>
+            </div>
+          </div>
+          <div class="sec"><div class="sec-title">Sky &amp; Sun</div>
+            <div class="row"><label for="swSky">Procedural Sky</label><span class="switch"><input type="checkbox" id="swSky" checked><i></i></span></div>
+            <div class="slider-row"><span class="lab">Sun height</span><input type="range" id="rngElevation" min="2" max="85" step="0.5" value="14"><span class="num" id="numElevation">14°</span></div>
+            <div class="slider-row"><span class="lab">Sun azimuth</span><input type="range" id="rngAzimuth" min="0" max="360" step="1" value="205"><span class="num" id="numAzimuth">205°</span></div>
+            <div class="slider-row"><span class="lab">Turbidity</span><input type="range" id="rngTurbidity" min="1" max="20" step="0.1" value="8"><span class="num" id="numTurbidity">8.0</span></div>
+            <div class="slider-row"><span class="lab">Rayleigh</span><input type="range" id="rngRayleigh" min="0" max="4" step="0.05" value="2.2"><span class="num" id="numRayleigh">2.2</span></div>
+            <div class="slider-row"><span class="lab">Sun power</span><input type="range" id="rngSunI" min="0" max="4" step="0.05" value="2.4"><span class="num" id="numSunI">2.4</span></div>
+          </div>
+          <div class="sec"><div class="sec-title">Atmosphere</div>
+            <div class="row"><label for="swFog">Fog</label><span class="switch"><input type="checkbox" id="swFog" checked><i></i></span></div>
+            <div class="color-row"><input type="color" id="fogColor" value="#b8c4cc"><span class="hex" id="fogColorHex">#B8C4CC</span><span style="flex:1"></span><span class="mono" style="font-size:9px;color:var(--dim-2)">FOG COLOR</span></div>
+            <div class="slider-row"><span class="lab">Fog near</span><input type="range" id="rngFogNear" min="0" max="120" step="1" value="30"><span class="num" id="numFogNear">30</span></div>
+            <div class="slider-row"><span class="lab">Fog far</span><input type="range" id="rngFogFar" min="20" max="400" step="2" value="140"><span class="num" id="numFogFar">140</span></div>
+            <div class="slider-row"><span class="lab">Amb. light</span><input type="range" id="rngHemi" min="0" max="1.5" step="0.01" value="0.55"><span class="num" id="numHemi">0.55</span></div>
+          </div>
+          <div class="sec"><div class="sec-title">Render &amp; Lens</div>
+            <div class="slider-row"><span class="lab">Exposure</span><input type="range" id="rngExposure" min="0.2" max="2.2" step="0.01" value="0.95"><span class="num" id="numExposure">0.95</span></div>
+            <div class="slider-row"><span class="lab">Bloom</span><input type="range" id="rngBloom" min="0" max="1.5" step="0.01" value="0.32"><span class="num" id="numBloom">0.32</span></div>
+            <div class="slider-row"><span class="lab">Bloom radius</span><input type="range" id="rngBloomR" min="0" max="1" step="0.01" value="0.65"><span class="num" id="numBloomR">0.65</span></div>
+            <div class="slider-row"><span class="lab">Bloom thresh.</span><input type="range" id="rngBloomT" min="0" max="1.2" step="0.01" value="0.82"><span class="num" id="numBloomT">0.82</span></div>
+            <div class="slider-row"><span class="lab">Saturation</span><input type="range" id="rngSat" min="-1" max="1" step="0.01" value="0.06"><span class="num" id="numSat">0.06</span></div>
+            <div class="slider-row"><span class="lab">Contrast</span><input type="range" id="rngContrast" min="-0.6" max="0.6" step="0.01" value="0.08"><span class="num" id="numContrast">0.08</span></div>
+            <div class="slider-row"><span class="lab">Vignette</span><input type="range" id="rngVig" min="0" max="1" step="0.01" value="0.32"><span class="num" id="numVig">0.32</span></div>
+            <div class="slider-row"><span class="lab">Film grain</span><input type="range" id="rngGrain" min="0" max="0.5" step="0.01" value="0.05"><span class="num" id="numGrain">0.05</span></div>
+            <div class="row"><label for="swShadows">Shadows</label><span class="switch"><input type="checkbox" id="swShadows" checked><i></i></span></div>
+          </div>
+          <div class="sec"><div class="sec-title">Backdrop</div>
+            <div class="color-row"><input type="color" id="bgColor" value="#060608"><span class="hex" id="bgColorHex">#060608</span><span style="flex:1"></span><span class="mono" style="font-size:9px;color:var(--dim-2)">USED WHEN SKY OFF</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── OUTLINER PANEL ── -->
+      <section class="panel-page hidden" id="page-outliner">
+        <div class="panel-head"><h2>Layers</h2><span class="mono" id="objCount" style="font-size:10px;color:var(--dim)">0 OBJECTS</span></div>
+        <div class="panel-body"><div id="outlinerList"></div></div>
+      </section>
+
+    </aside>
+
+    <!-- viewport -->
+    <main id="viewport-wrap">
+      <div id="viewport"></div>
+      <div id="vignette"></div>
+      <div id="touchHint">1-finger orbit · 2-finger pan &amp; zoom · tap to select</div>
+      <div id="fps">60 FPS</div>
+      <div id="camLabel">Perspective · Free Orbit</div>
+
+      <div id="placeHint">
+        <div class="t1">Release to place</div>
+        <div class="t2">Asset will land flush on the surface below</div>
+      </div>
+
+      <!-- floating camera bar -->
+      <div id="cambar">
+        <button class="icon-btn" id="camOrbit" title="Reset orbit view"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="3.6" ry="9"/></svg></button>
+        <button class="icon-btn" id="camTop" title="Top view"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v8M8 12h8"/></svg></button>
+        <button class="icon-btn" id="camFront" title="Front view"><svg viewBox="0 0 24 24"><path d="M4 18h16M6 18V6l6-3 6 3v12"/></svg></button>
+        <button class="icon-btn" id="camRight" title="Right view"><svg viewBox="0 0 24 24"><path d="M18 4v16M18 12L6 5v14z"/></svg></button>
+        <div class="vdiv"></div>
+        <button class="icon-btn" id="camFocus" title="Focus selected (F)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+        <button class="icon-btn" id="camTurntable" title="Turntable orbit"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></button>
+      </div>
+    </main>
+
+    <!-- inspector -->
+    <aside id="inspector" class="panel">
+      <div class="insp-title"><input id="objName" value="Scene" spellcheck="false" autocomplete="off"><span class="badge" id="objBadge">SCENE</span></div>
+      <div id="inspectorScroll"></div>
+    </aside>
+
+  </div>
+
+  <!-- ════════ PHOTO MODE UI ════════ -->
+  <div id="photo-ui">
+    <div class="letterbox" id="lb-top"></div>
+    <div class="letterbox" id="lb-bottom"></div>
+    <div id="gridOverlay"></div>
+
+    <div id="photo-top">
+      <div class="seg" id="aspectSeg">
+        <button data-aspect="free">Free</button>
+        <button data-aspect="1:1">1:1</button>
+        <button data-aspect="4:5">4:5</button>
+        <button data-aspect="3:2" class="active">3:2</button>
+        <button data-aspect="16:9">16:9</button>
+        <button data-aspect="2.39:1">2.39:1</button>
+      </div>
+      <div class="seg" id="timerSeg">
+        <button data-timer="0" class="active">No timer</button>
+        <button data-timer="3">3s</button>
+        <button data-timer="5">5s</button>
+        <button data-timer="10">10s</button>
+      </div>
+      <button class="icon-btn" id="photoGridBtn" title="Toggle rule-of-thirds grid" style="width:36px;height:36px;"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg></button>
+    </div>
+
+    <button class="icon-btn" id="photo-exit" title="Exit photo mode (Esc)"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+
+    <div id="photo-bottom">
+      <div class="photo-side">
+        <span class="mini-label">Filter</span>
+        <div class="seg" id="filterSeg" style="flex-direction:column;align-items:stretch;">
+          <button data-filter="none" class="active">None</button>
+          <button data-filter="noir">Noir</button>
+          <button data-filter="golden">Golden</button>
+          <button data-filter="teal">Teal / Orange</button>
+          <button data-filter="fade">Fade</button>
+          <button data-filter="vivid">Vivid</button>
+        </div>
+      </div>
+      <button id="shutter" title="Capture (Space)"></button>
+      <div class="photo-side">
+        <span class="mini-label">Resolution</span>
+        <div class="seg" id="scaleSeg" style="flex-direction:column;align-items:stretch;">
+          <button data-scale="1" class="active">1× · 1920px</button>
+          <button data-scale="2">2× · 2560px</button>
+          <button data-scale="4">4× · 3840px</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="shotStrip"></div>
+    <div id="shotFlash"></div>
+  </div>
+
+  <!-- ════════ EXPORT MENU ════════ -->
+  <div class="menu panel" id="exportMenu">
+    <div class="mhead">Export 3D</div>
+    <button id="expSceneGLB"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Scene as GLB<small>binary · full world</small></button>
+    <button id="expSelGLB"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>Selection as GLB<small>.glb model</small></button>
+    <button id="expSelSTL"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg>Selection as STL<small>3D print ready</small></button>
+    <div class="mhead">Project</div>
+    <button id="expProject"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/></svg>Save Project…<small>.genieproj.json · re-opens here</small></button>
+    <button id="expBrowser"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Quick-save Backup<small>browser storage</small></button>
+  </div>
+
+  <!-- ════════ SETTINGS MODAL ════════ -->
+  <div class="modal-veil" id="settingsModal">
+    <div class="modal panel">
+      <h3>Studio <b>Settings</b></h3>
+      <div class="sub">Ingestion · Render · Workflow</div>
+
+      <div class="set-row">
+        <div class="st"><div class="t1">✦ Smart texture matching</div><div class="t2">When models arrive with loose textures, the studio matches them to the right material slot automatically — by filename DNA (albedo / normal / roughness / metalness / AO / emissive).</div></div>
+        <span class="switch"><input type="checkbox" id="swSmartMatch" checked><i></i></span>
+      </div>
+      <div class="set-row">
+        <div class="st"><div class="t1">Match strictness</div><div class="t2">How adventurous auto-matching should be when names are ambiguous.</div></div>
+        <div class="seg" id="matchStrategy" style="min-width:170px;">
+          <button data-strategy="strict">Strict</button>
+          <button data-strategy="balanced" class="active">Balanced</button>
+          <button data-strategy="loose">Loose</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="st"><div class="t1">Render quality</div><div class="t2">Resolution scale, shadow resolution and post-processing cost. Ultra targets ProMotion / 120 Hz iPads.</div></div>
+        <div class="seg" id="qualitySeg" style="min-width:190px;">
+          <button data-quality="performance">Perf</button>
+          <button data-quality="balanced" class="active">Balanced</button>
+          <button data-quality="ultra">Ultra</button>
+        </div>
+      </div>
+
+      <div class="set-row">
+        <div class="st"><div class="t1">Autosave to browser</div><div class="t2">Silently backs up your scene every 45 seconds. Big uploaded models are skipped — use Save Project for full fidelity.</div></div>
+        <span class="switch"><input type="checkbox" id="swAutosave" checked><i></i></span>
+      </div>
+      <div class="set-row">
+        <div class="st"><div class="t1">Frame-rate meter</div><div class="t2">Show a live FPS readout in the viewport corner.</div></div>
+        <span class="switch"><input type="checkbox" id="swFps"><i></i></span>
+      </div>
+      <div class="set-row">
+        <div class="st"><div class="t1">Clear saved browser scene</div><div class="t2">Erase the autosaved backup stored on this device.</div></div>
+        <button class="mini-btn warn" id="btnClearStorage">Clear</button>
+      </div>
+
+      <div class="modal-foot"><button class="pill primary" id="settingsDone">Done</button></div>
+    </div>
+  </div>
+
+  <!-- ════════ SHORTCUTS MODAL ════════ -->
+  <div class="modal-veil" id="helpModal">
+    <div class="modal panel">
+      <h3>Studio <b>Shortcuts</b></h3>
+      <div class="sub">Fast hands · no mode confusion</div>
+      <div class="shortcut-grid">
+        <span class="kbd">Q</span><span>Select tool</span>
+        <span class="kbd">W</span><span>Move tool</span>
+        <span class="kbd">E</span><span>Rotate tool</span>
+        <span class="kbd">R</span><span>Scale tool</span>
+        <span class="kbd">F</span><span>Frame / focus selected</span>
+        <span class="kbd">G</span><span>Toggle grid snap</span>
+        <span class="kbd">⇧ G</span><span>Toggle grid visibility</span>
+        <span class="kbd">⌘ / Ctrl + D</span><span>Duplicate selected</span>
+        <span class="kbd">Del / ⌫</span><span>Delete selected</span>
+        <span class="kbd">Esc</span><span>Deselect / exit photo mode</span>
+        <span class="kbd">H</span><span>Hide / show all UI chrome</span>
+        <span class="kbd">P</span><span>Toggle cinematic photo mode</span>
+        <span class="kbd">Space</span><span>Shutter · in photo mode</span>
+        <span class="kbd">⌘ / Ctrl + S</span><span>Quick-save backup</span>
+        <span class="kbd">⌘ / Ctrl + Z</span><span>Undo</span>
+        <span class="kbd">⌘ / Ctrl + ⇧ + Z</span><span>Redo</span>
+        <span class="kbd">1 – 4</span><span>Camera presets · in view bar</span>
+      </div>
+      <div class="modal-foot"><button class="pill primary" id="helpDone">Got it</button></div>
+    </div>
+  </div>
+
+  <input type="file" id="openProjectInput" accept=".json,.genieproj,application/json" style="display:none">
+  <div id="toasts"></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
