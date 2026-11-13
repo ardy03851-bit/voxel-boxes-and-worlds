@@ -354,3 +354,10 @@ body.chrome-hidden #topbar, body.chrome-hidden #rail, body.chrome-hidden #sidepa
 
 body.photomode #fps{display:none !important;}
 #photo-top{flex-wrap:wrap;max-width:96vw;justify-content:center;}
+
+@media (max-width:900px){
+  #btnHelp{display:none;}
+  .tgroup{gap:6px;}
+  .vdiv{margin:0;}
+}
+.tex-pick{transition:transform .15s ease, border-color .15s ease;}
